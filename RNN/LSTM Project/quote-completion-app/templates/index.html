@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unfinished — a sentence completion model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+
+    <header class="hero">
+      <span class="mark">&ldquo;</span>
+      <h1>Unfinished</h1>
+      <p class="subtitle">Leave a sentence hanging. A small LSTM, trained on quotations,
+        will guess where it was headed.</p>
+    </header>
+
+    <main class="sheet">
+      <label for="seed-input" class="field-label">Where the sentence begins</label>
+      <textarea
+        id="seed-input"
+        placeholder="the meaning of life"
+        rows="3"
+        autofocus
+      ></textarea>
+
+      <div class="controls">
+        <div class="length-control">
+          <label for="n-words">words to add</label>
+          <input type="number" id="n-words" min="1" max="30" value="5">
+        </div>
+
+        <div class="buttons">
+          <button id="suggest-btn" class="btn btn-line">next word</button>
+          <button id="generate-btn" class="btn btn-solid">finish it</button>
+        </div>
+      </div>
+
+      <p id="status" class="status" role="status"></p>
+
+      <section id="suggestions-section" class="suggestions hidden">
+        <h2>likeliest next words</h2>
+        <ul id="suggestions-list" class="word-list"></ul>
+      </section>
+
+      <section id="result-section" class="result hidden">
+        <h2>completed</h2>
+        <p id="result-text"></p>
+        <button id="copy-btn" class="btn btn-text">copy</button>
+      </section>
+    </main>
+
+    <footer class="colophon">
+      <p>Trained on a corpus of quotations. Architecture: 50-dimensional embedding &rarr; LSTM (128 units) &rarr; softmax over 8,980 words.</p>
+    </footer>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
