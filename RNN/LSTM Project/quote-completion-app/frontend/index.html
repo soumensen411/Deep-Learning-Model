@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Commonplace Book — sentence completion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:        #1c2321;
+    --ink-soft:   #2a332f;
+    --parchment:  #efe3c8;
+    --parchment-2:#e4d5ae;
+    --brass:      #b8863b;
+    --brass-dim:  #8c6a35;
+    --rule:       rgba(28,35,33,0.16);
+    --rule-dark:  rgba(239,227,200,0.14);
+    --error:      #9c3b3b;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    background: var(--ink);
+    color: var(--parchment);
+    font-family:"IBM Plex Sans", sans-serif;
+  }
+
+  body{
+    background-image:
+      radial-gradient(ellipse at 20% -10%, rgba(184,134,59,0.10), transparent 55%),
+      radial-gradient(ellipse at 90% 110%, rgba(184,134,59,0.06), transparent 55%);
+    display:flex;
+    justify-content:center;
+    padding: 56px 20px 80px;
+  }
+
+  .sheet{
+    width:100%;
+    max-width: 620px;
+    animation: rise 700ms cubic-bezier(.2,.7,.3,1) both;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(14px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .sheet{ animation: none; }
+  }
+
+  .kicker{
+    font-family:"IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--brass);
+    margin: 0 0 10px;
+  }
+
+  h1{
+    font-family:"Fraunces", serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: clamp(34px, 6vw, 48px);
+    line-height: 1.08;
+    margin: 0 0 8px;
+    color: var(--parchment);
+  }
+
+  .sub{
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(239,227,200,0.68);
+    max-width: 46ch;
+    margin: 0 0 40px;
+  }
+
+  .page{
+    background: var(--parchment);
+    color: var(--ink);
+    border-radius: 3px;
+    padding: 40px 36px 32px;
+    box-shadow:
+      0 1px 0 rgba(0,0,0,0.4),
+      0 30px 60px -25px rgba(0,0,0,0.55);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page::before{
+    content:"";
+    position:absolute;
+    left:0; top:0; bottom:0;
+    width: 56px;
+    background: linear-gradient(to right, rgba(184,134,59,0.14), transparent);
+    border-right: 1px solid var(--rule);
+  }
+
+  .field-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    color: var(--brass-dim);
+    margin: 0 0 10px 56px;
+  }
+
+  textarea{
+    width: 100%;
+    padding: 0 0 14px 56px;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--rule);
+    font-family:"Fraunces", serif;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--ink);
+    resize: none;
+    outline: none;
+    min-height: 64px;
+  }
+
+  textarea::placeholder{ color: rgba(28,35,33,0.34); }
+
+  textarea:focus{ border-bottom-color: var(--brass); }
+
+  .controls{
+    margin: 26px 0 0 56px;
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+  }
+
+  .dial{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+
+  .dial-label{
+    font-size: 12.5px;
+    color: rgba(28,35,33,0.6);
+  }
+
+  .dots{
+    display:flex;
+    gap: 5px;
+  }
+
+  .dot{
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 1.3px solid var(--brass-dim);
+    background: transparent;
+    cursor:pointer;
+    padding:0;
+  }
+
+  .dot.filled{ background: var(--brass); border-color: var(--brass); }
+
+  button.stamp{
+    font-family:"IBM Plex Mono", monospace;
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    color: var(--parchment);
+    background: var(--ink);
+    border: none;
+    padding: 11px 22px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 120ms ease, background 120ms ease;
+  }
+
+  button.stamp:hover{ background: var(--ink-soft); }
+  button.stamp:active{ transform: scale(0.97); }
+  button.stamp:disabled{ opacity: 0.45; cursor: default; transform:none; }
+
+  .result{
+    margin: 34px 0 0 56px;
+    padding-top: 22px;
+    border-top: 1px dashed var(--rule);
+    min-height: 30px;
+    font-family:"Fraunces", serif;
+    font-size: 21px;
+    line-height: 1.6;
+  }
+
+  .result .seed{ color: var(--ink); }
+
+  .result .added{
+    color: var(--brass-dim);
+    font-style: italic;
+  }
+
+  .result .cursor{
+    display:inline-block;
+    width: 2px;
+    height: 1em;
+    background: var(--brass);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .hint{
+    margin: 6px 0 0 56px;
+    font-size: 13px;
+    color: rgba(28,35,33,0.5);
+  }
+
+  .hint.error{ color: var(--error); }
+
+  footer{
+    max-width: 620px;
+    width:100%;
+    margin: 22px auto 0;
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: rgba(239,227,200,0.45);
+  }
+
+  .status-dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background: #6b7268;
+    flex-shrink:0;
+  }
+
+  .status-dot.ok{ background: #8faa7c; }
+  .status-dot.bad{ background: var(--error); }
+
+  @media (max-width: 480px){
+    .page{ padding: 32px 20px 26px; }
+    .page::before{ display:none; }
+    .field-label, textarea, .controls, .result, .hint{ margin-left: 0; padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sheet">
+    <p class="kicker">an LSTM trained on 3,038 quotes, one word at a time</p>
+    <h1>The Commonplace Book</h1>
+    <p class="sub">
+      Begin a thought — a few words is enough. The model was trained on quotes
+      from Austen, Einstein, Rowling and hundreds of others, and it will guess
+      how the sentence keeps going, word by word.
+    </p>
+
+    <div class="page">
+      <p class="field-label">begin a sentence</p>
+      <textarea id="seed" rows="2" placeholder="the meaning of life is"></textarea>
+
+      <div class="controls">
+        <div class="dial">
+          <span class="dial-label">words to add</span>
+          <div class="dots" id="dots"></div>
+        </div>
+        <button class="stamp" id="go">continue the thought</button>
+      </div>
+
+      <div class="result" id="result" aria-live="polite"></div>
+      <p class="hint" id="hint"></p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">checking the model…</span>
+  </footer>
+
+<script>
+  const API_BASE = "http://localhost:5000/api";
+  const dotsEl = document.getElementById("dots");
+  const seedEl = document.getElementById("seed");
+  const goBtn = document.getElementById("go");
+  const resultEl = document.getElementById("result");
+  const hintEl = document.getElementById("hint");
+  const statusDot = document.getElementById("statusDot");
+  const statusText = document.getElementById("statusText");
+
+  let nWords = 5;
+  const MAX_DOTS = 10;
+
+  function renderDots(){
+    dotsEl.innerHTML = "";
+    for(let i=1;i<=MAX_DOTS;i++){
+      const d = document.createElement("button");
+      d.type = "button";
+      d.className = "dot" + (i <= nWords ? " filled" : "");
+      d.setAttribute("aria-label", i + " words");
+      d.addEventListener("click", () => { nWords = i; renderDots(); });
+      dotsEl.appendChild(d);
+    }
+  }
+  renderDots();
+
+  async function checkHealth(){
+    try{
+      const res = await fetch(`${API_BASE}/health`);
+      const data = await res.json();
+      if(data.ready){
+        statusDot.className = "status-dot ok";
+        statusText.textContent = "model loaded and ready";
+      } else {
+        statusDot.className = "status-dot bad";
+        statusText.textContent = data.error || "model not ready";
+      }
+    }catch(err){
+      statusDot.className = "status-dot bad";
+      statusText.textContent = "backend offline — start backend/app.py on port 5000";
+    }
+  }
+  checkHealth();
+
+  async function complete(){
+    const seed = seedEl.value.trim();
+    hintEl.textContent = "";
+    hintEl.className = "hint";
+
+    if(!seed){
+      hintEl.textContent = "Write the start of a sentence first.";
+      hintEl.className = "hint error";
+      return;
+    }
+
+    goBtn.disabled = true;
+    goBtn.textContent = "listening for the next word…";
+    resultEl.innerHTML = `<span class="seed">${escapeHtml(seed)}</span><span class="cursor"></span>`;
+
+    try{
+      const res = await fetch(`${API_BASE}/predict`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ text: seed, n_words: nWords })
+      });
+      const data = await res.json();
+
+      if(!res.ok){
+        hintEl.textContent = data.error || "Something went wrong.";
+        hintEl.className = "hint error";
+        resultEl.innerHTML = "";
+        return;
+      }
+
+      resultEl.innerHTML =
+        `<span class="seed">${escapeHtml(seed)}</span> ` +
+        `<span class="added">${escapeHtml(data.completion)}</span>`;
+    }catch(err){
+      hintEl.textContent = "Couldn't reach the backend — is it running on port 5000?";
+      hintEl.className = "hint error";
+      resultEl.innerHTML = "";
+    }finally{
+      goBtn.disabled = false;
+      goBtn.textContent = "continue the thought";
+    }
+  }
+
+  function escapeHtml(s){
+    const div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  goBtn.addEventListener("click", complete);
+  seedEl.addEventListener("keydown", (e) => {
+    if(e.key === "Enter" && !e.shiftKey){
+      e.preventDefault();
+      complete();
+    }
+  });
+</script>
+</body>
+</html>
